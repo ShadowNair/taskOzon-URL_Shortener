@@ -1,5 +1,4 @@
 version: "2"
-
 run:
   timeout: 3m
   tests: true
@@ -12,6 +11,3 @@ linters:
     - ineffassign
     - staticcheck
     - unused
-
-issues:
-  exclude-use-default: false

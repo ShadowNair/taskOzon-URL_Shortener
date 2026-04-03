@@ -37,6 +37,11 @@ make docker-memory
 make docker-postgres
 ```
 
+### Опустить контейнеры
+```bash
+make docker-down
+```
+
 ## Примеры запросов
 ```bash
 curl -X POST http://localhost:8080/api/v1/links \
@@ -53,6 +58,14 @@ curl http://localhost:8080/abcDEF123_
 make test
 ```
 
+## Тесты для репозитория Postgres
+```bash
+make docker-db-up
+make test-repo-postgres
+make docker-db-down
+```
+
+
 ## Линтер
 ```bash
 make lint
@@ -67,7 +80,7 @@ GitHub Actions запускает:
 ## `Dockerfile`
 
 ```dockerfile
-FROM golang:1.23-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 WORKDIR /app
 

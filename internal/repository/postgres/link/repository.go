@@ -14,8 +14,12 @@ import (
 
 const (
 	sqlTextForRegisterShortURL = `
-	INSERT INTO link (original_url, short_code) VALUES ($1, $2) 
-	` //ON CONFLICT RETURNING
+	INSERT INTO link (original_url, short_code) 
+	VALUES ($1, $2)
+	ON CONFLICT (original_url) 
+	DO UPDATE SET short_code = link.short_code
+	RETURNING short_code
+	`
 	sqlTextForGetByOriginalURL = `
 	SELECT short_code FROM link WHERE original_url = $1
 	`
@@ -35,34 +39,22 @@ func New(sql *sql.DB) *Repository {
 }
 
 func (r *Repository) RegisterShortURL(ctx context.Context, links link.Link) (string, error) {
-	_, err := r.sql.ExecContext(ctx, sqlTextForRegisterShortURL, links.OriginalURL, links.ShortCode)
-	if err == nil {
-		return links.ShortCode, nil
-	}
+	var shortCode string
+	
+	err := r.sql.QueryRowContext(ctx, sqlTextForRegisterShortURL, links.OriginalURL, links.ShortCode,).Scan(&shortCode)
 
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-		switch strings.ToLower(pgErr.ConstraintName) {
-
-		case "link_pkey":
-			links.ShortCode, err = r.getByOriginalURL(ctx, links.OriginalURL)
-			if err != nil {
-				return "", fmt.Errorf("load existing link after original url conflict: %w", err)
-			}
-			return links.ShortCode, nil
-
-		case "link_short_code_key", "idx_link_short_code":
-			return "", globalerrors.ErrShortCodeConflict
-
-		default:
-			links.ShortCode, err = r.getByOriginalURL(ctx, links.OriginalURL)
-			if err != nil {
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			if strings.Contains(strings.ToLower(pgErr.ConstraintName), "short_code") ||
+				strings.ToLower(pgErr.ConstraintName) == "idx_link_short_code" {
 				return "", globalerrors.ErrShortCodeConflict
 			}
-			return links.ShortCode, nil
 		}
+		return "", fmt.Errorf("problem with insert link: %w", err)
 	}
-	return "", fmt.Errorf("problem with insert link: %w", err) // ошибки проработать, найти более легкую реализацию и читабильную
+	
+	return shortCode, nil
 }
 
 func (r *Repository) getByOriginalURL(ctx context.Context, originalURL string) (string, error) {
@@ -90,5 +82,3 @@ func (r *Repository) GetByShortCode(ctx context.Context, shortCode string) (stri
 		return originalURL, nil
 	}
 }
-
-//explain analyze

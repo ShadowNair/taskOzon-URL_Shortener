@@ -1,25 +1,29 @@
 services:
   app-memory:
     build: .
-    container_name: shortener-app-memory
+    container_name: ${APP_MEMORY_CONTAINER_NAME:-shortener-app-memory}
     ports:
-      - "8080:8080"
+      - "${APP_PORT:-8080}:${APP_PORT:-8080}"
     command: ["/app/shortener", "-storage=memory"]
+    environment:
+      APP_HOST: ${APP_HOST:-0.0.0.0}
+      APP_PORT: ${APP_PORT:-8080}
     profiles: ["memory"]
 
   postgres:
     image: postgres:16
-    container_name: shortener-postgres
+    container_name: ${POSTGRES_CONTAINER_NAME:-shortener-postgres}
     environment:
-      POSTGRES_DB: shortener
-      POSTGRES_USER: shortener
-      POSTGRES_PASSWORD: shortener
+      POSTGRES_DB: ${POSTGRES_DB:-shortener}
+      POSTGRES_USER: ${POSTGRES_USER:-shortener}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shortener}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - ./migrations:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U shortener -d shortener"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-shortener} -d ${POSTGRES_DB:-shortener}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -27,17 +31,22 @@ services:
 
   app-postgres:
     build: .
-    container_name: shortener-app-postgres
+    container_name: ${APP_POSTGRES_CONTAINER_NAME:-shortener-app-postgres}
     ports:
-      - "8080:8080"
+      - "${APP_PORT:-8080}:${APP_PORT:-8080}"
     command: ["/app/shortener", "-storage=postgres"]
     environment:
+      APP_HOST: ${APP_HOST:-0.0.0.0}
+      APP_PORT: ${APP_PORT:-8080}
       POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: shortener
-      POSTGRES_PASSWORD: shortener
-      POSTGRES_DB: shortener
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-shortener}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shortener}
+      POSTGRES_DB: ${POSTGRES_DB:-shortener}
     depends_on:
       postgres:
         condition: service_healthy
     profiles: ["postgres"]
+
+volumes:
+  postgres_data:

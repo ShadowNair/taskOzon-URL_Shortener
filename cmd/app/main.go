@@ -41,7 +41,7 @@ func main() {
 		repo = postgres.New(connCfg.PostgresSQL)
 		cleanup = connCfg.CloseAll
 	default:
-		log.Fatalf("unsupported storage type: %s", cfg.AppConfig.StorageType)
+		log.Fatalf("unsupported storage type: %s", *storageType)
 	}
 
 	if cleanup != nil {

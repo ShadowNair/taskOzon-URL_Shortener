@@ -24,7 +24,6 @@ type PostgresConfig struct {
 type AppConfig struct {
 	Host        string
 	Port        string
-	StorageType string
 }
 
 func GetConfig() *Config {
@@ -50,7 +49,6 @@ func GetAppConfig() *AppConfig {
 	return &AppConfig{
 		Host:        envOrDefault("APP_HOST", "0.0.0.0"),
 		Port:        normalizePort(envOrDefault("APP_PORT", "8080")),
-		StorageType: strings.ToLower(envOrDefault("STORAGE_TYPE", "memory")),
 	}
 }
 

@@ -5,8 +5,8 @@
 - `postgres`
 
 ## API
-- `POST /api/v1/links` - создать короткую ссылку
-- `GET /{shortCode}` - получить оригинальный URL
+- `POST /api/v1/link` - создать короткую ссылку
+- `GET /api/v1/link/{shortCode}` - получить оригинальный URL
 - `GET /healthz` - healthcheck
 - `GET /swagger/` - Swagger UI
 - `GET /swagger/doc.json` - OpenAPI JSON
@@ -44,13 +44,13 @@ make docker-down
 
 ## Примеры запросов
 ```bash
-curl -X POST http://localhost:8080/api/v1/links \
+curl -X POST http://localhost:8080/api/v1/link \
   -H 'Content-Type: application/json' \
   -d '{"url":"https://example.com"}'
 ```
 
 ```bash
-curl http://localhost:8080/abcDEF123_
+curl http://localhost:8080/api/v1/linkabcDEF123_
 ```
 
 ## Тесты

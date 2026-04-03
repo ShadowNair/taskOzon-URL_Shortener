@@ -57,18 +57,6 @@ func (r *Repository) RegisterShortURL(ctx context.Context, links link.Link) (str
 	return shortCode, nil
 }
 
-func (r *Repository) getByOriginalURL(ctx context.Context, originalURL string) (string, error) {
-	var shortURL string
-	err := r.sql.QueryRowContext(ctx, sqlTextForGetByOriginalURL, originalURL).Scan(&shortURL)
-	if errors.Is(err, sql.ErrNoRows) {
-		return "", globalerrors.ErrNotFound
-	}
-	if err != nil {
-		return "", fmt.Errorf("query by original url: %w", err)
-	}
-	return shortURL, nil
-}
-
 func (r *Repository) GetByShortCode(ctx context.Context, shortCode string) (string, error) {
 	var originalURL string
 	err := r.sql.QueryRowContext(ctx, sqlTextForGetByShortCode, shortCode).Scan(&originalURL)

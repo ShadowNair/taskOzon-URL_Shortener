@@ -1,0 +1,43 @@
+services:
+  app-memory:
+    build: .
+    container_name: shortener-app-memory
+    ports:
+      - "8080:8080"
+    command: ["/app/shortener", "-storage=memory"]
+    profiles: ["memory"]
+
+  postgres:
+    image: postgres:16
+    container_name: shortener-postgres
+    environment:
+      POSTGRES_DB: shortener
+      POSTGRES_USER: shortener
+      POSTGRES_PASSWORD: shortener
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shortener -d shortener"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    profiles: ["postgres"]
+
+  app-postgres:
+    build: .
+    container_name: shortener-app-postgres
+    ports:
+      - "8080:8080"
+    command: ["/app/shortener", "-storage=postgres"]
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: shortener
+      POSTGRES_PASSWORD: shortener
+      POSTGRES_DB: shortener
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles: ["postgres"]

@@ -37,7 +37,6 @@ func TestRepository_RegisterShortURL_Success_NewLink(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "abc123", shortCode)
 
-	// Проверяем, что ссылка действительно сохранилась в обоих индексах
 	original, err := repo.GetByShortCode(ctx, "abc123")
 	assert.NoError(t, err)
 	assert.Equal(t, "https://example.com", original)
@@ -48,24 +47,20 @@ func TestRepository_RegisterShortURL_DuplicateOriginalURL_ReturnsExisting(t *tes
 	repo := newTestRepo()
 	ctx := context.Background()
 
-	// Первый раз регистрируем
 	firstLink := makeTestLink("https://example.com", "abc123")
 	_, err := repo.RegisterShortURL(ctx, firstLink)
 	require.NoError(t, err)
 
-	// Второй раз — тот же original_url, но другой short_code (игнорируется)
 	secondLink := makeTestLink("https://example.com", "xyz789")
 	returnedCode, err := repo.RegisterShortURL(ctx, secondLink)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "abc123", returnedCode) // Вернули старый код, а не новый!
+	assert.Equal(t, "abc123", returnedCode)
 
-	// Проверяем, что в хранилище остался первый вариант
 	original, err := repo.GetByShortCode(ctx, "abc123")
 	assert.NoError(t, err)
 	assert.Equal(t, "https://example.com", original)
 
-	// "xyz789" не должен быть зарегистрирован
 	_, err = repo.GetByShortCode(ctx, "xyz789")
 	assert.ErrorIs(t, err, globalerrors.ErrNotFound)
 }
@@ -124,12 +119,10 @@ func TestRepository_GetByShortCode_Success(t *testing.T) {
 	repo := newTestRepo()
 	ctx := context.Background()
 
-	// Предварительно регистрируем ссылку
 	testLink := makeTestLink("https://example.com", "abc123")
 	_, err := repo.RegisterShortURL(ctx, testLink)
 	require.NoError(t, err)
 
-	// Получаем по short_code
 	originalURL, err := repo.GetByShortCode(ctx, "abc123")
 
 	assert.NoError(t, err)
@@ -163,10 +156,8 @@ func TestRepository_ConcurrentAccess_NoRace(t *testing.T) {
 	repo := New()
 	ctx := context.Background()
 
-	// Запускаем горутины на запись и чтение
 	done := make(chan bool)
 
-	// 10 горутин пишут разные ссылки
 	for i := 0; i < 10; i++ {
 		go func(idx int) {
 			link := makeTestLink(

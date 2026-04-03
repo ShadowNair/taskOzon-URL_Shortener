@@ -7,5 +7,3 @@ OriginalURL string
 ShortCode	string
 CreatedAt	time.Time
 }
-
-// Validate in handler need

@@ -4,4 +4,4 @@ CREATE TABLE IF NOT EXISTS link (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_links_short_code ON link(short_code);
+CREATE INDEX IF NOT EXISTS idx_link_short_code ON link(short_code);

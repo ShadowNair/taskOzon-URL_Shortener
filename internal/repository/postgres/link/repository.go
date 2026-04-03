@@ -14,8 +14,8 @@ import (
 
 const (
 	sqlTextForRegisterShortURL = `
-	INSERT INTO link (original_url, short_code) VALUES ($1, $2)
-	`
+	INSERT INTO link (original_url, short_code) VALUES ($1, $2) 
+	` //ON CONFLICT RETURNING
 	sqlTextForGetByOriginalURL = `
 	SELECT short_code FROM link WHERE original_url = $1
 	`
@@ -62,7 +62,7 @@ func (r *Repository) RegisterShortURL(ctx context.Context, links link.Link) (str
 			return links.ShortCode, nil
 		}
 	}
-	return "", fmt.Errorf("problem with insert link: %w", err)
+	return "", fmt.Errorf("problem with insert link: %w", err) // ошибки проработать, найти более легкую реализацию и читабильную
 }
 
 func (r *Repository) getByOriginalURL(ctx context.Context, originalURL string) (string, error) {
@@ -80,11 +80,15 @@ func (r *Repository) getByOriginalURL(ctx context.Context, originalURL string) (
 func (r *Repository) GetByShortCode(ctx context.Context, shortCode string) (string, error) {
 	var originalURL string
 	err := r.sql.QueryRowContext(ctx, sqlTextForGetByShortCode, shortCode).Scan(&originalURL)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return "", globalerrors.ErrNotFound
-		}
-		return "", fmt.Errorf("query by short code: %w", err)
+
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return "", globalerrors.ErrNotFound
+	case err != nil:
+		return "", fmt.Errorf("problem with ByShortCode: %w", err)
+	default:
+		return originalURL, nil
 	}
-	return originalURL, nil
 }
+
+//explain analyze

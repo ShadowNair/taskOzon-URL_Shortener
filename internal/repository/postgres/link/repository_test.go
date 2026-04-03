@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"testing"
-	"time"
 	"url-shortener/internal/domain/model/link"
 	"url-shortener/pkg/globalerrors"
 
@@ -20,7 +19,7 @@ func setupRepo(t *testing.T) (*Repository, sqlmock.Sqlmock, func()) {
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	require.NoError(t, err)
 	repo := New(db)
-	cleanup := func() {db.Close()}
+	cleanup := func() { _ = db.Close() }
 	return repo, mock, cleanup
 }
 
@@ -28,7 +27,7 @@ func TestRepository_RegisterURL_Success(t *testing.T) {
 	repo, mock, cleanup := setupRepo(t)
 	defer cleanup()
 
-	ctx, _ := context.WithTimeout(context.Background(), 1 * time.Second)
+	ctx := context.Background()
 	testLink := link.Link{
 		OriginalURL: "https://hello.org",
 		ShortCode: "abc123",
